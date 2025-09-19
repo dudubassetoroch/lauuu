@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Fundo Rosado com Corações</title>
+  <style>
+    :root{
+      --pink1: #ffd1e8;
+      --pink2: #ffb3d6;
+      --accent: #ff6fa3;
+    }
+
+    html,body{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial}
+    body{
+      background: linear-gradient(180deg,var(--pink1),var(--pink2));
+      overflow:hidden;
+      display:flex;align-items:center;justify-content:center;
+    }
+
+    .stage{
+      width:100%;height:100%;position:absolute;top:0;left:0;pointer-events:none;
+    }
+
+    .heart{
+      position:absolute;
+      width:48px;height:48px;
+      transform:translate(-50%,-50%) scale(1) rotate(-45deg);
+      transform-origin:center center;
+      pointer-events:none;
+      will-change:transform, opacity;
+    }
+    .heart .l, .heart .r{
+      content:'';position:absolute;width:48px;height:48px;border-radius:50%;background:var(--accent);
+    }
+    .heart .l{left:0;top:0}
+    .heart .r{right:0;top:0}
+    .heart .bottom{
+      position:absolute;left:0;top:0;width:48px;height:48px;background:var(--accent);clip-path:polygon(0 60%,50% 100%,100% 60%,100% 100%,0 100%);
+      transform:rotate(0deg);
+    }
+
+    @keyframes floatUp{
+      0%{transform:translate(var(--start-x,0),var(--start-y,0)) scale(var(--s,1)) rotate(-45deg);opacity:0}
+      10%{opacity:1}
+      100%{transform:translate(calc(var(--start-x,0) + var(--dx,0px)), calc(var(--start-y,0) - var(--rise,600px))) scale(calc(var(--s,1) * 0.9)) rotate(-45deg);opacity:0}
+    }
+
+    .card{
+      position:absolute;top:50%;left:50%;transform:translate(-50%, -50%);
+      z-index:10;padding:20px 24px;border-radius:18px;;backdrop-filter:blur(6px);box-shadow:0 10px 30px rgba(0,0,0,0.08);text-align:center;pointer-events:auto;
+      max-width: 320px;
+    }
+
+    .card h1{margin:0 0 6px;font-size:20px;color:#7a1330}
+    .card p{margin:10px 0;color:#4b2431;line-height:1.4;font-size:15px}
+
+    @media (max-width:600px){
+      .card{margin:16px;width:90%}
+    }
+  </style>
+</head>
+<body>
+  <div class="stage" id="stage" aria-hidden="true"></div>
+  <div class="card">
+    <h1>Desculpa ♥</h1>
+    <img src="lau.jpg" alt="" style="width: 200px; border-radius: 18px;">
+    <p>Eu errei quando deixei de falar com você por causa de outra pessoa. Lembro das poucas vezes que nos vimos, principalmente no cinema, quando assistimos O filme de terror e você segurou meu braço de medo kkkk. Foi especial para mim, quero viver mais momentos assim com você, e sinto muito por ter me afastado.</p>
+  </div>
+
+  <script>
+    const stage = document.getElementById('stage');
+
+    function makeHeart(x, y) {
+      const el = document.createElement('div');
+      el.className = 'heart';
+      el.innerHTML = '<div class="l"></div><div class="r"></div><div class="bottom"></div>';
+
+      const size = (Math.random() * 0.9 + 0.6) * 48;
+      const scale = (size / 48).toFixed(2);
+      const rise = Math.floor(Math.random() * 500 + 360);
+      const dx = (Math.random() * 200 - 100).toFixed(0) + 'px';
+      const dur = (Math.random() * 3 + 4).toFixed(2) + 's';
+      const delay = (Math.random() * 0.6).toFixed(2) + 's';
+
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+
+      const startX = x !== undefined ? x : Math.random() * vw;
+      const startY = y !== undefined ? y : vh + 40;
+
+      el.style.left = startX + 'px';
+      el.style.top = startY + 'px';
+      el.style.width = size + 'px';
+      el.style.height = size + 'px';
+      el.style.setProperty('--s', scale);
+      el.style.setProperty('--rise', rise + 'px');
+      el.style.setProperty('--dx', dx);
+      el.style.setProperty('--start-x', '0px');
+      el.style.setProperty('--start-y', '0px');
+
+      el.style.animation = `floatUp ${dur} linear ${delay}`;
+      el.style.animationFillMode = 'forwards';
+
+      stage.appendChild(el);
+      el.addEventListener('animationend', () => el.remove());
+    }
+
+    let autoInterval = null;
+    function startAuto() {
+      if (autoInterval) return;
+      autoInterval = setInterval(() => {
+        const n = Math.random() > 0.6 ? 2 : 1;
+        for (let i=0;i<n;i++) makeHeart();
+      }, 700);
+    }
+    function stopAuto(){clearInterval(autoInterval);autoInterval=null}
+
+    startAuto();
+
+    function onPointer(e){
+      const x = e.clientX || (e.touches && e.touches[0].clientX);
+      const y = e.clientY || (e.touches && e.touches[0].clientY);
+      for (let i=0;i<4;i++) setTimeout(()=>makeHeart(x + (Math.random()*60-30), y + (Math.random()*60-30)), i*60);
+    }
+
+    window.addEventListener('pointerdown', onPointer);
+    window.addEventListener('touchstart', onPointer, {passive:true});
+
+    window.addEventListener('blur', stopAuto);
+    window.addEventListener('focus', startAuto);
+
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced) {
+      stopAuto();
+      document.querySelector('.card p').textContent = 'Modo sem movimento ativado nas preferências do sistema.';
+      for (let i=0;i<8;i++) {
+        const left = Math.random()*window.innerWidth;
+        const top = Math.random()*window.innerHeight;
+        makeHeart(left, top);
+      }
+    }
+  </script>
+</body>
+</html>
